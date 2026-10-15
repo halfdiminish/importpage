@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AliNext (Ali2Woo Lite) - Product Importer Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-full bg-slate-50 text-slate-800 font-sans antialiased overflow-hidden flex flex-col">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-slate-900 text-white shadow-md z-20 flex items-center justify-between px-6 py-3.5 shrink-0">
+        <div class="flex items-center space-x-3">
+            <div class="bg-gradient-to-tr from-amber-500 to-orange-600 p-2 rounded-xl text-white shadow-lg shadow-orange-500/20 flex items-center justify-center w-10 h-10">
+                <i class="fa-solid fa-boxes-stacked text-lg"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg tracking-tight flex items-center gap-2">
+                    AliNext <span class="text-xs bg-orange-500/20 text-orange-400 border border-orange-500/30 px-2 py-0.5 rounded-full font-medium">Ali2Woo Lite v3.4</span>
+                </h1>
+                <p class="text-xs text-slate-400">WooCommerce Dropshipping & Product Importer Hub</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center space-x-4">
+            <!-- Connection Status Pill -->
+            <div id="connectionStatusBadge" class="hidden sm:flex items-center space-x-2 bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-full text-xs">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="text-slate-300 font-medium">Store Connected</span>
+            </div>
+            
+            <button onclick="openSettingsModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3.5 py-2 rounded-lg text-xs font-medium transition flex items-center gap-2 border border-slate-700">
+                <i class="fa-solid fa-gear text-slate-400"></i>
+                <span class="hidden md:inline">Store & Markup Settings</span>
+            </button>
+
+            <div class="h-6 w-px bg-slate-800"></div>
+
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow">
+                    AD
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <div class="flex-1 flex overflow-hidden">
+
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 hidden md:flex">
+            <div class="p-4 border-b border-slate-100">
+                <button onclick="openImportModal()" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold py-2.5 px-4 rounded-xl shadow-lg shadow-orange-500/25 transition flex items-center justify-center gap-2 text-sm">
+                    <i class="fa-solid fa-plus-circle"></i>
+                    <span>Import Products</span>
+                </button>
+            </div>
+            
+            <nav class="flex-1 p-4 space-y-1.5 overflow-y-auto">
+                <a href="#" onclick="switchTab('catalog')" id="nav-catalog" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition bg-orange-50 text-orange-600">
+                    <i class="fa-solid fa-layer-group w-5 text-center"></i>
+                    <span>Import List (<span id="sidebarImportCount">0</span>)</span>
+                </a>
+                <a href="#" onclick="switchTab('pushed')" id="nav-pushed" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition">
+                    <i class="fa-solid fa-cloud-arrow-up w-5 text-center"></i>
+                    <span>Pushed to Store (<span id="sidebarPushedCount">0</span>)</span>
+                </a>
+                <a href="#" onclick="switchTab('logs')" id="nav-logs" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition">
+                    <i class="fa-solid fa-clock-rotate-left w-5 text-center"></i>
+                    <span>Sync & Activity Logs</span>
+                </a>
+                <a href="#" onclick="switchTab('analytics')" id="nav-analytics" class="flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition">
+                    <i class="fa-solid fa-chart-pie w-5 text-center"></i>
+                    <span>Pricing & Markup Analytics</span>
+                </a>
+            </nav>
+
+            <!-- Quick Info Box -->
+            <div class="p-4 m-4 bg-slate-50 border border-slate-200/80 rounded-2xl text-xs space-y-2">
+                <div class="flex items-center justify-between text-slate-500 font-medium">
+                    <span>Default Markup</span>
+                    <span id="sidebarMarkupDisplay" class="text-slate-900 font-bold">2.5x + $2.00</span>
+                </div>
+                <div class="flex items-center justify-between text-slate-500 font-medium">
+                    <span>Target WooCommerce</span>
+                    <span class="text-emerald-600 font-bold truncate max-w-[110px]" id="sidebarStoreUrl">store.mysite.com</span>
+                </div>
+                <button onclick="pushAllReadyItems()" class="w-full mt-2 bg-slate-900 hover:bg-slate-800 text-white py-2 rounded-lg font-medium transition shadow-sm flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-rocket text-xs"></i> Push All to WooCommerce
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col overflow-y-auto bg-slate-50/50 relative">
+
+            <!-- Mobile Action Bar -->
+            <div class="md:hidden bg-white border-b border-slate-200 p-3 flex items-center justify-between">
+                <button onclick="openImportModal()" class="bg-orange-500 text-white px-4 py-2 rounded-lg text-xs font-semibold shadow flex items-center gap-2">
+                    <i class="fa-solid fa-plus-circle"></i> Import Products
+                </button>
+                <div class="flex space-x-2">
+                    <button onclick="switchTab('catalog')" class="px-3 py-1.5 bg-slate-100 text-xs rounded-lg font-medium">List</button>
+                    <button onclick="switchTab('pushed')" class="px-3 py-1.5 bg-slate-100 text-xs rounded-lg font-medium">Pushed</button>
+                    <button onclick="switchTab('logs')" class="px-3 py-1.5 bg-slate-100 text-xs rounded-lg font-medium">Logs</button>
+                </div>
+            </div>
+
+            <!-- Tab 1: Catalog / Import List -->
+            <div id="tab-catalog" class="p-6 space-y-6 max-w-7xl mx-auto w-full">
+                <!-- Header Stats & Actions -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900 tracking-tight">Import List Catalog</h2>
+                        <p class="text-sm text-slate-500">Review, edit variations, pricing, and push items directly to your WooCommerce store.</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="relative">
+                            <i class="fa-solid fa-search absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+                            <input type="text" id="searchInput" oninput="filterProducts()" placeholder="Search imported products..." class="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 w-64 shadow-sm">
+                        </div>
+                        <select id="categoryFilter" onchange="filterProducts()" class="bg-white border border-slate-200 rounded-xl text-xs py-2 px-3 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 shadow-sm">
+                            <option value="">All Categories</option>
+                            <option value="Electronics">Electronics</option>
+                            <option value="Home & Kitchen">Home & Kitchen</option>
+                            <option value="Apparel">Apparel</option>
+                            <option value="Gadgets">Gadgets</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Bulk Action Toolbar -->
+                <div class="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between flex-wrap gap-3">
+                    <div class="flex items-center space-x-3">
+                        <label class="flex items-center space-x-2 text-xs font-medium text-slate-600 pl-2">
+                            <input type="checkbox" id="selectAllCheckbox" onclick="toggleSelectAll(this)" class="rounded text-orange-500 focus:ring-orange-500 w-4 h-4">
+                            <span>Select All</span>
+                        </label>
+                        <span class="text-slate-300">|</span>
+                        <span id="selectedCountBadge" class="text-xs text-slate-500 font-medium">0 items selected</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="bulkPushToStore()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium px-3.5 py-2 rounded-xl transition shadow-sm flex items-center gap-1.5">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Push Selected to WooCommerce
+                        </button>
+                        <button onclick="bulkApplyMarkup()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium px-3.5 py-2 rounded-xl transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-calculator"></i> Re-apply Markup Rules
+                        </button>
+                        <button onclick="bulkDelete()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-medium px-3 py-2 rounded-xl transition">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Product Grid -->
+                <div id="productGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Dynamic Product Cards injected via JS -->
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyCatalogState" class="hidden flex-col items-center justify-center p-12 bg-white rounded-3xl border border-dashed border-slate-300 text-center">
+                    <div class="w-16 h-16 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center text-2xl mb-4">
+                        <i class="fa-solid fa-box-open"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-slate-800">No products in import list</h3>
+                    <p class="text-xs text-slate-500 max-w-sm mt-1 mb-6">Import items using AliExpress product URLs, search queries, or upload mock CSV/JSON data.</p>
+                    <button onclick="openImportModal()" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2.5 rounded-xl text-xs font-semibold shadow-md transition flex items-center gap-2">
+                        <i class="fa-solid fa-plus-circle"></i> Import Products Now
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab 2: Pushed Products -->
+            <div id="tab-pushed" class="p-6 space-y-6 max-w-7xl mx-auto w-full hidden">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900 tracking-tight">Pushed WooCommerce Products</h2>
+                        <p class="text-sm text-slate-500">Successfully synced items live on your WooCommerce store with active inventory sync.</p>
+                    </div>
+                    <button onclick="loadDemoProducts()" class="bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow transition">
+                        <i class="fa-solid fa-rotate mr-1.5"></i> Sync Inventory Now
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider">
+                                    <th class="p-4">Product</th>
+                                    <th class="p-4">WC ID</th>
+                                    <th class="p-4">Category</th>
+                                    <th class="p-4">Cost</th>
+                                    <th class="p-4">Regular Price</th>
+                                    <th class="p-4">Stock</th>
+                                    <th class="p-4">Status</th>
+                                    <th class="p-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pushedTableBody" class="divide-y divide-slate-100">
+                                <!-- Pushed items injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Logs -->
+            <div id="tab-logs" class="p-6 space-y-6 max-w-7xl mx-auto w-full hidden">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900 tracking-tight">Sync & Activity Logs</h2>
+                        <p class="text-sm text-slate-500">Real-time event logging for WooCommerce REST API calls, imports, and inventory updates.</p>
+                    </div>
+                    <button onclick="clearLogs()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium px-3.5 py-2 rounded-xl transition">
+                        Clear Logs
+                    </button>
+                </div>
+
+                <div class="bg-slate-900 rounded-2xl p-6 text-slate-300 font-mono text-xs shadow-lg space-y-3 overflow-y-auto max-h-[600px]" id="logsContainer">
+                    <div class="flex items-center space-x-2 text-slate-500 pb-2 border-b border-slate-800">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                        <span>AliNext Worker Daemon initialized successfully. Connected to WP REST API v3.</span>
+                    </div>
+                    <!-- Logs injected dynamically -->
+                </div>
+            </div>
+
+            <!-- Tab 4: Analytics -->
+            <div id="tab-analytics" class="p-6 space-y-6 max-w-7xl mx-auto w-full hidden">
+                <h2 class="text-xl font-bold text-slate-900 tracking-tight">Pricing & Markup Analytics</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                        <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">Average Profit Margin</span>
+                        <div class="text-3xl font-extrabold text-slate-900">64.8%</div>
+                        <p class="text-xs text-emerald-600 font-medium"><i class="fa-solid fa-arrow-trend-up"></i> +4.2% vs last week</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                        <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">Total Imported Cost Value</span>
+                        <div class="text-3xl font-extrabold text-slate-900" id="totalCostValue">$1,240.50</div>
+                        <p class="text-xs text-slate-500">Across all catalog items</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                        <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">Projected Store Retail Value</span>
+                        <div class="text-3xl font-extrabold text-orange-600" id="totalRetailValue">$3,480.00</div>
+                        <p class="text-xs text-slate-500">Based on current markup rules</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="font-bold text-slate-800 text-sm">Active Markup Formula Simulator</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Multiplier (e.g. 2.5x)</label>
+                            <input type="number" id="simMultiplier" value="2.5" step="0.1" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Fixed Add-on ($)</label>
+                            <input type="number" id="simAddon" value="3.00" step="0.5" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs">
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="runSimulation()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2.5 px-4 rounded-xl text-xs transition">
+                                Simulate Profit Impact
+                            </button>
+                        </div>
+                    </div>
+                    <div id="simulationResult" class="p-4 bg-orange-50 border border-orange-200 rounded-xl text-xs text-orange-900 hidden">
+                        Simulated retail price for a $10.00 item: <strong id="simOutput">$28.00</strong> (Est. Profit: <strong id="simProfit">$18.00</strong>)
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modal 1: Import Product Modal (URL / Search / JSON Upload) -->
+    <div id="importModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-xl w-full shadow-2xl overflow-hidden border border-slate-100 transform transition-all">
+            <div class="bg-gradient-to-r from-orange-500 to-amber-500 p-6 text-white flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-white/20 p-2.5 rounded-2xl">
+                        <i class="fa-solid fa-cloud-arrow-down text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg">Import Products into AliNext</h3>
+                        <p class="text-xs text-orange-100">Parse from AliExpress URLs, Search Queries, or Bulk Upload</p>
+                    </div>
+                </div>
+                <button onclick="closeImportModal()" class="text-white/80 hover:text-white p-2 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-6">
+                <!-- Tabs inside modal -->
+                <div class="flex border-b border-slate-200 space-x-6 text-xs font-semibold">
+                    <button onclick="switchImportTab('url')" id="modalTabUrl" class="pb-3 border-b-2 border-orange-500 text-orange-600 transition">AliExpress URL(s)</button>
+                    <button onclick="switchImportTab('search')" id="modalTabSearch" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition">AliExpress Search</button>
+                    <button onclick="switchImportTab('file')" id="modalTabFile" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition">JSON / CSV Upload</button>
+                </div>
+
+                <!-- URL Import Panel -->
+                <div id="importPanelUrl" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">AliExpress Product URL(s)</label>
+                        <textarea id="importUrlsInput" rows="4" placeholder="https://www.aliexpress.com/item/1005005829102911.html\nhttps://www.aliexpress.com/item/1005004910293812.html" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"></textarea>
+                        <p class="text-[11px] text-slate-400 mt-1">Paste one or multiple product URLs separated by new lines.</p>
+                    </div>
+                    <button onclick="executeUrlImport()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl shadow-lg shadow-orange-500/20 text-xs transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-download"></i> Fetch & Import Products
+                    </button>
+                </div>
+
+                <!-- Search Import Panel -->
+                <div id="importPanelSearch" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Search Keyword</label>
+                        <input type="text" id="searchKeywordInput" placeholder="e.g. Wireless Earbuds, Smartwatch, Mechanical Keyboard" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Max Items to Import</label>
+                            <select id="searchLimit" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs">
+                                <option value="3">3 Products</option>
+                                <option value="6" selected>6 Products</option>
+                                <option value="12">12 Products</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Category Mapping</label>
+                            <select id="searchCategory" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs">
+                                <option value="Electronics">Electronics</option>
+                                <option value="Home & Kitchen">Home & Kitchen</option>
+                                <option value="Apparel">Apparel</option>
+                                <option value="Gadgets">Gadgets</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button onclick="executeSearchImport()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl shadow-lg shadow-orange-500/20 text-xs transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-magnifying-glass"></i> Import from Search Results
+                    </button>
+                </div>
+
+                <!-- File Upload Panel -->
+                <div id="importPanelFile" class="space-y-4 hidden">
+                    <div class="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center hover:bg-slate-50 transition cursor-pointer" onclick="document.getElementById('fileUploadInput').click()">
+                        <i class="fa-solid fa-file-arrow-up text-3xl text-orange-500 mb-2"></i>
+                        <p class="text-xs font-semibold text-slate-700">Click to upload JSON or CSV product file</p>
+                        <p class="text-[10px] text-slate-400 mt-1">Supports AliNext backup formats or Ali2Woo exports</p>
+                        <input type="file" id="fileUploadInput" accept=".json,.csv" onchange="handleFileUpload(event)" class="hidden">
+                    </div>
+                </div>
+
+                <!-- Import Progress Simulation -->
+                <div id="importProgressBox" class="hidden space-y-2 pt-2 border-t border-slate-100">
+                    <div class="flex justify-between text-xs font-medium text-slate-600">
+                        <span id="importProgressStatus">Parsing product metadata & high-res images...</span>
+                        <span id="importProgressPercent">65%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                        <div id="importProgressBar" class="bg-orange-500 h-full w-2/3 transition-all duration-300"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: Product Detail & Editor Modal -->
+    <div id="productEditorModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] shadow-2xl overflow-hidden border border-slate-100 flex flex-col">
+            <!-- Modal Header -->
+            <div class="bg-slate-900 p-5 text-white flex items-center justify-between shrink-0">
+                <div class="flex items-center space-x-3">
+                    <div id="editorModalThumb" class="w-12 h-12 rounded-xl bg-slate-800 bg-cover bg-center border border-slate-700"></div>
+                    <div>
+                        <h3 id="editorModalTitle" class="font-bold text-base truncate max-w-md">Edit Product</h3>
+                        <p class="text-xs text-slate-400">AliExpress ID: <span id="editorModalAliId" class="text-slate-200">100500...</span></p>
+                    </div>
+                </div>
+                <button onclick="closeProductEditor()" class="text-slate-400 hover:text-white p-2 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Modal Tabs Body -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                <!-- Editor Tabs -->
+                <div class="flex border-b border-slate-200 space-x-6 text-xs font-semibold">
+                    <button onclick="switchEditorTab('general')" id="edTabGeneral" class="pb-3 border-b-2 border-orange-500 text-orange-600 transition">General & Pricing</button>
+                    <button onclick="switchEditorTab('description')" id="edTabDesc" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition">Description & Gallery</button>
+                    <button onclick="switchEditorTab('variations')" id="edTabVar" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition">Variations & Attributes</button>
+                    <button onclick="switchEditorTab('seo')" id="edTabSeo" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition">SEO & Tags</button>
+                </div>
+
+                <input type="hidden" id="editProductId">
+
+                <!-- Tab 1: General & Pricing -->
+                <div id="edPanelGeneral" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Product Title</label>
+                        <input type="text" id="editTitleInput" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-medium">
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">AliExpress Cost ($)</label>
+                            <input type="number" id="editCostInput" readonly class="w-full bg-slate-100 border border-slate-200 rounded-xl p-3 text-xs text-slate-500 cursor-not-allowed">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Regular Retail Price ($)</label>
+                            <input type="number" id="editPriceInput" step="0.01" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold text-orange-600">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Sale Price ($)</label>
+                            <input type="number" id="editSalePriceInput" step="0.01" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Category</label>
+                            <select id="editCategoryInput" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
+                                <option value="Electronics">Electronics</option>
+                                <option value="Home & Kitchen">Home & Kitchen</option>
+                                <option value="Apparel">Apparel</option>
+                                <option value="Gadgets">Gadgets</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Stock Quantity</label>
+                            <input type="number" id="editStockInput" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Description & Gallery -->
+                <div id="edPanelDesc" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">HTML Description</label>
+                        <textarea id="editDescInput" rows="6" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-mono"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-2">High-Resolution Image Gallery</label>
+                        <div id="editGalleryContainer" class="grid grid-cols-4 gap-3">
+                            <!-- Thumbnails injected here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Variations -->
+                <div id="edPanelVar" class="space-y-4 hidden">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-800">Product Attributes & Variations</span>
+                        <button onclick="addVariationRow()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg transition font-medium">
+                            <i class="fa-solid fa-plus mr-1"></i> Add Variation
+                        </button>
+                    </div>
+                    <div class="border border-slate-200 rounded-xl overflow-hidden">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold">
+                                <tr>
+                                    <th class="p-3">Attribute (Color/Size)</th>
+                                    <th class="p-3">Cost ($)</th>
+                                    <th class="p-3">Price ($)</th>
+                                    <th class="p-3">Stock</th>
+                                    <th class="p-3 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="editVariationsTableBody" class="divide-y divide-slate-100">
+                                <!-- Variation rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab 4: SEO -->
+                <div id="edPanelSeo" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">SEO Meta Title</label>
+                        <input type="text" id="editMetaTitle" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">SEO Meta Description</label>
+                        <textarea id="editMetaDesc" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Product Tags (comma separated)</label>
+                        <input type="text" id="editTags" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="bg-slate-50 border-t border-slate-200 p-4 flex items-center justify-between shrink-0">
+                <button onclick="closeProductEditor()" class="text-slate-600 hover:text-slate-900 text-xs font-medium px-4 py-2">Cancel</button>
+                <div class="flex space-x-3">
+                    <button onclick="saveProductChanges()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition shadow">
+                        Save Changes
+                    </button>
+                    <button onclick="pushSingleProductFromEditor()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition shadow flex items-center gap-1.5">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Save & Push to Store
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 3: Settings Modal (WooCommerce API & Markup Rules) -->
+    <div id="settingsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-100">
+            <div class="bg-slate-900 p-6 text-white flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-slate-800 p-2.5 rounded-2xl">
+                        <i class="fa-solid fa-gear text-lg text-orange-400"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base">Store & Pricing Markup Settings</h3>
+                        <p class="text-xs text-slate-400">Configure WooCommerce API & automated pricing rules</p>
+                    </div>
+                </div>
+                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white p-2 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-5">
+                <div class="space-y-3">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">WooCommerce REST API Credentials</h4>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Store URL</label>
+                        <input type="text" id="settingStoreUrl" value="https://myawesome-store.com" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Consumer Key (CK)</label>
+                        <input type="text" id="settingCk" value="ck_live_9f81a7d65b38e..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Consumer Secret (CS)</label>
+                        <input type="password" id="settingCs" value="cs_live_382910a7bc918..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs font-mono">
+                    </div>
+                </div>
+
+                <hr class="border-slate-100">
+
+                <div class="space-y-3">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Default Markup Calculation Rules</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Multiplier (e.g. 2.5x)</label>
+                            <input type="number" id="settingMultiplier" value="2.5" step="0.1" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Fixed Add-on ($)</label>
+                            <input type="number" id="settingAddon" value="2.00" step="0.5" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-50 border-t border-slate-200 p-4 flex items-center justify-between">
+                <button onclick="testWcConnection()" class="text-xs bg-slate-200 hover:bg-slate-300 text-slate-800 font-medium px-4 py-2.5 rounded-xl transition">
+                    <i class="fa-solid fa-plug mr-1"></i> Test Connection
+                </button>
+                <button onclick="saveSettings()" class="bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition shadow">
+                    Save Settings
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toastNotification" class="fixed bottom-6 right-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center space-x-3 text-xs border border-slate-800">
+        <div id="toastIcon" class="text-emerald-400 text-base"><i class="fa-solid fa-circle-check"></i></div>
+        <div>
+            <h5 id="toastTitle" class="font-bold">Success</h5>
+            <p id="toastMessage" class="text-slate-400 text-[11px]">Action performed successfully.</p>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // In-Memory Database for AliNext Importer
+        let importedProducts = [
+            {
+                id: "ali_100500582",
+                aliId: "100500582910",
+                title: "TWS Wireless Bluetooth 5.3 Earbuds HiFi Stereo Noise Canceling Sport Headset",
+                category: "Electronics",
+                cost: 8.50,
+                price: 23.25,
+                salePrice: 19.99,
+                stock: 420,
+                status: "import_list", // import_list or pushed
+                wcId: null,
+                image: "https://placehold.co/400x400/orange/white?text=TWS+Earbuds",
+                gallery: [
+                    "https://placehold.co/400x400/orange/white?text=Earbuds+1",
+                    "https://placehold.co/400x400/amber/white?text=Earbuds+2",
+                    "https://placehold.co/400x400/slate/white?text=Earbuds+3"
+                ],
+                description: "<p>Experience crystal clear sound with Bluetooth 5.3 TWS earbuds. Ergonomic design, IPX7 waterproof, and 30h playtime with charging case.</p>",
+                variations: [
+                    { attr: "Black / Standard", cost: 8.50, price: 23.25, stock: 200 },
+                    { attr: "White / Standard", cost: 8.50, price: 23.25, stock: 220 }
+                ],
+                metaTitle: "TWS Wireless Bluetooth 5.3 Earbuds | AliNext Store",
+                metaDesc: "Buy high quality TWS wireless earbuds with active noise cancellation.",
+                tags: "earbuds, bluetooth, wireless, audio"
+            },
+            {
+                id: "ali_100500491",
+                aliId: "100500491029",
+                title: "Smart Fitness Watch IP68 Waterproof Heart Rate Blood Oxygen Monitor",
+                category: "Gadgets",
+                cost: 14.20,
+                price: 37.50,
+                salePrice: 29.99,
+                stock: 180,
+                status: "import_list",
+                wcId: null,
+                image: "https://placehold.co/400x400/slate/white?text=Smart+Watch",
+                gallery: [
+                    "https://placehold.co/400x400/slate/white?text=Watch+1",
+                    "https://placehold.co/400x400/zinc/white?text=Watch+2"
+                ],
+                description: "<p>Track your daily workouts, heart rate, blood oxygen, and smartphone notifications with this sleek fitness smartwatch.</p>",
+                variations: [
+                    { attr: "Black Silicone Strap", cost: 14.20, price: 37.50, stock: 100 },
+                    { attr: "Rose Gold Strap", cost: 14.20, price: 37.50, stock: 80 }
+                ],
+                metaTitle: "Smart Fitness Watch IP68 | AliNext Store",
+                metaDesc: "All-day health tracking smartwatch with IP68 waterproof rating.",
+                tags: "smartwatch, fitness, tracker, gadgets"
+            },
+            {
+                id: "ali_100500382",
+                aliId: "100500382193",
+                title: "Portable Mini USB Electric Vegetable Chopper & Garlic Mincer",
+                category: "Home & Kitchen",
+                cost: 6.80,
+                price: 19.00,
+                salePrice: 15.50,
+                stock: 350,
+                status: "pushed",
+                wcId: 1042,
+                image: "https://placehold.co/400x400/emerald/white?text=Mini+Chopper",
+                gallery: [
+                    "https://placehold.co/400x400/emerald/white?text=Chopper+1"
+                ],
+                description: "<p>Wireless electric garlic chopper and vegetable grinder. USB rechargeable kitchen gadget.</p>",
+                variations: [
+                    { attr: "Green / 250ml", cost: 6.80, price: 19.00, stock: 200 },
+                    { attr: "Pink / 250ml", cost: 6.80, price: 19.00, stock: 150 }
+                ],
+                metaTitle: "Portable Mini USB Garlic Chopper",
+                metaDesc: "Fast and easy wireless garlic mincer for kitchen preparation.",
+                tags: "kitchen, chopper, gadgets, cooking"
+            }
+        ];
+
+        let settings = {
+            storeUrl: "https://myawesome-store.com",
+            multiplier: 2.5,
+            addon: 2.00
+        };
+
+        let currentActiveTab = 'catalog';
+
+        // Initialization
+        window.onload = function() {
+            renderCatalog();
+            renderPushedTable();
+            updateSidebarCounts();
+            addLog("AliNext dashboard loaded successfully. Ready for import and synchronization.");
+        };
+
+        // Tab Switching
+        function switchTab(tabId) {
+            currentActiveTab = tabId;
+            ['catalog', 'pushed', 'logs', 'analytics'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                const nav = document.getElementById(`nav-${t}`);
+                if(nav) {
+                    nav.className = "flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition";
+                }
+            });
+
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const activeNav = document.getElementById(`nav-${tabId}`);
+            if(activeNav) {
+                activeNav.className = "flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium bg-orange-50 text-orange-600";
+            }
+        }
+
+        // Render Catalog Grid
+        function renderCatalog() {
+            const grid = document.getElementById('productGrid');
+            const emptyState = document.getElementById('emptyCatalogState');
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            const categoryFilter = document.getElementById('categoryFilter').value;
+
+            const filtered = importedProducts.filter(p => {
+                if (p.status !== 'import_list') return false;
+                const matchesSearch = p.title.toLowerCase().includes(searchQuery) || p.aliId.includes(searchQuery);
+                const matchesCat = categoryFilter === "" || p.category === categoryFilter;
+                return matchesSearch && matchesCat;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = "";
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+                return;
+            }
+
+            emptyState.classList.remove('flex');
+            emptyState.classList.add('hidden');
+
+            grid.innerHTML = filtered.map(p => `
+                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition group">
+                    <div>
+                        <div class="relative h-48 bg-slate-100 overflow-hidden">
+                            <img src="${p.image}" alt="${p.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.src='https://placehold.co/400x400/orange/white?text=Product'">
+                            <span class="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-semibold px-2.5 py-1 rounded-lg">
+                                ${p.category}
+                            </span>
+                            <span class="absolute top-3 right-3 bg-orange-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg shadow">
+                                Stock: ${p.stock}
+                            </span>
+                        </div>
+                        <div class="p-4 space-y-2">
+                            <div class="text-[11px] text-slate-400 font-mono">AliID: ${p.aliId}</div>
+                            <h4 class="font-bold text-xs text-slate-800 line-clamp-2 leading-relaxed">${p.title}</h4>
+                            <div class="flex items-center justify-between pt-2">
+                                <div>
+                                    <span class="text-[10px] text-slate-400 block">AliExpress Cost</span>
+                                    <span class="text-xs font-semibold text-slate-700">$${p.cost.toFixed(2)}</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-[10px] text-orange-600 block font-medium">Retail Price</span>
+                                    <span class="text-sm font-extrabold text-orange-600">$${p.price.toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-2">
+                        <label class="flex items-center space-x-2 text-xs font-medium text-slate-600 pl-1">
+                            <input type="checkbox" data-id="${p.id}" class="product-checkbox rounded text-orange-500 focus:ring-orange-500 w-4 h-4" onclick="updateSelectedCount()">
+                            <span>Select</span>
+                        </label>
+                        <div class="flex space-x-1.5">
+                            <button onclick="openProductEditor('${p.id}')" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-medium transition">
+                                Edit
+                            </button>
+                            <button onclick="pushSingleProduct('${p.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-medium transition shadow-sm flex items-center gap-1.5">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> Push
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterProducts() {
+            renderCatalog();
+        }
+
+        // Render Pushed Table
+        function renderPushedTable() {
+            const tbody = document.getElementById('pushedTableBody');
+            const pushedItems = importedProducts.filter(p => p.status === 'pushed');
+
+            if (pushedItems.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-400 text-xs">No products pushed to WooCommerce yet.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = pushedItems.map(p => `
+                <tr class="hover:bg-slate-50/80 transition">
+                    <td class="p-4 flex items-center space-x-3">
+                        <img src="${p.image}" class="w-10 h-10 rounded-xl object-cover border border-slate-200">
+                        <span class="font-semibold text-slate-800 line-clamp-1 max-w-xs">${p.title}</span>
+                    </td>
+                    <td class="p-4 font-mono text-slate-500">#${p.wcId || '1082'}</td>
+                    <td class="p-4"><span class="bg-slate-100 px-2.5 py-1 rounded-lg text-slate-600">${p.category}</span></td>
+                    <td class="p-4 text-slate-500">$${p.cost.toFixed(2)}</td>
+                    <td class="p-4 font-bold text-slate-800">$${p.price.toFixed(2)}</td>
+                    <td class="p-4"><span class="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-bold">${p.stock}</span></td>
+                    <td class="p-4"><span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Synced</span></td>
+                    <td class="p-4 text-right">
+                        <button onclick="syncSingleProduct('${p.id}')" class="text-slate-400 hover:text-slate-700 p-1.5" title="Re-sync with AliExpress"><i class="fa-solid fa-rotate"></i></button>
+                        <button onclick="openProductEditor('${p.id}')" class="text-orange-500 hover:text-orange-700 p-1.5" title="Edit Item"><i class="fa-solid fa-pen-to-square"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updateSidebarCounts() {
+            const listCount = importedProducts.filter(p => p.status === 'import_list').length;
+            const pushedCount = importedProducts.filter(p => p.status === 'pushed').length;
+            document.getElementById('sidebarImportCount').innerText = listCount;
+            document.getElementById('sidebarPushedCount').innerText = pushedCount;
+            document.getElementById('sidebarStoreUrl').innerText = settings.storeUrl.replace('https://','');
+            document.getElementById('sidebarMarkupDisplay').innerText = `${settings.multiplier}x + $${settings.addon.toFixed(2)}`;
+        }
+
+        // Import Modal Controls
+        function openImportModal() {
+            document.getElementById('importModal').classList.remove('hidden');
+        }
+        function closeImportModal() {
+            document.getElementById('importModal').classList.add('hidden');
+            document.getElementById('importProgressBox').classList.add('hidden');
+        }
+
+        function switchImportTab(tab) {
+            ['url', 'search', 'file'].forEach(t => {
+                document.getElementById(`importPanel${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.add('hidden');
+                document.getElementById(`modalTab${t.charAt(0).toUpperCase() + t.slice(1)}`).className = "pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition";
+            });
+            document.getElementById(`importPanel${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.remove('hidden');
+            document.getElementById(`modalTab${tab.charAt(0).toUpperCase() + tab.slice(1)}`).className = "pb-3 border-b-2 border-orange-500 text-orange-600 transition";
+        }
+
+        function executeUrlImport() {
+            const urls = document.getElementById('importUrlsInput').value.trim();
+            if (!urls) {
+                showToast("Error", "Please enter at least one AliExpress URL", "error");
+                return;
+            }
+
+            showProgress("Parsing AliExpress product pages & downloading high-res images...", 30);
+            setTimeout(() => {
+                showProgress("Calculating retail markup prices & generating variations...", 80);
+                setTimeout(() => {
+                    // Add mock imported product
+                    const newId = 'ali_' + Math.floor(Math.random() * 900000 + 100000);
+                    const cost = 12.50;
+                    const price = cost * settings.multiplier + settings.addon;
+                    importedProducts.unshift({
+                        id: newId,
+                        aliId: Math.floor(Math.random() * 900000000 + 100000000).toString(),
+                        title: "Professional LED Ring Light with Tripod Stand for Live Streaming",
+                        category: "Electronics",
+                        cost: cost,
+                        price: price,
+                        salePrice: price * 0.85,
+                        stock: 500,
+                        status: "import_list",
+                        wcId: null,
+                        image: "https://placehold.co/400x400/indigo/white?text=LED+Ring+Light",
+                        gallery: [
+                            "https://placehold.co/400x400/indigo/white?text=Ring+Light+1",
+                            "https://placehold.co/400x400/purple/white?text=Ring+Light+2"
+                        ],
+                        description: "<p>10-inch LED ring light with adjustable tripod stand and phone holder for TikTok, YouTube, and photography.</p>",
+                        variations: [
+                            { attr: "10-inch Stand Kit", cost: 12.50, price: price, stock: 300 },
+                            { attr: "12-inch Pro Kit", cost: 16.00, price: price + 8, stock: 200 }
+                        ],
+                        metaTitle: "Professional LED Ring Light | AliNext Store",
+                        metaDesc: "Top quality ring light with tripod stand.",
+                        tags: "ringlight, streaming, photography, led"
+                    });
+                    renderCatalog();
+                    updateSidebarCounts();
+                    closeImportModal();
+                    addLog("Successfully imported 1 product from AliExpress URL batch.");
+                    showToast("Success", "Product successfully imported to list!", "success");
+                }, 800);
+            }, 600);
+        }
+
+        function executeSearchImport() {
+            const keyword = document.getElementById('searchKeywordInput').value.trim() || "Gadget";
+            const limit = parseInt(document.getElementById('searchLimit').value);
+            const category = document.getElementById('searchCategory').value;
+
+            showProgress(`Searching AliExpress for '${keyword}'...`, 40);
+            setTimeout(() => {
+                showProgress(`Importing ${limit} products with variations & gallery images...`, 85);
+                setTimeout(() => {
+                    for(let i=0; i<limit; i++) {
+                        const cost = Math.floor(Math.random() * 20 + 5);
+                        const price = cost * settings.multiplier + settings.addon;
+                        importedProducts.unshift({
+                            id: 'ali_' + Math.floor(Math.random() * 900000 + 100000),
+                            aliId: Math.floor(Math.random() * 900000000 + 100000000).toString(),
+                            title: `${keyword} - Pro Edition Model ${i+1}`,
+                            category: category,
+                            cost: cost,
+                            price: price,
+                            salePrice: price * 0.9,
+                            stock: 250,
+                            status: "import_list",
+                            wcId: null,
+                            image: "https://placehold.co/400x400/orange/white?text=" + encodeURIComponent(keyword),
+                            gallery: ["https://placehold.co/400x400/orange/white?text=Img1"],
+                            description: `<p>High demand ${keyword} imported via AliNext automated search crawler.</p>`,
+                            variations: [{ attr: "Standard", cost: cost, price: price, stock: 250 }],
+                            metaTitle: `${keyword} | AliNext Store`,
+                            metaDesc: `Buy best ${keyword} online.`,
+                            tags: keyword.toLowerCase()
+                        });
+                    }
+                    renderCatalog();
+                    updateSidebarCounts();
+                    closeImportModal();
+                    addLog(`Successfully imported ${limit} products from AliExpress keyword '${keyword}'.`);
+                    showToast("Success", `${limit} products imported successfully!`, "success");
+                }, 800);
+            }, 600);
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            showProgress("Reading and validating backup file...", 50);
+            setTimeout(() => {
+                // Add mock item from file
+                importedProducts.unshift({
+                    id: 'ali_' + Math.floor(Math.random() * 900000 + 100000),
+                    aliId: "9988776655",
+                    title: "Imported from JSON/CSV Backup: Ergonomic Office Mouse",
+                    category: "Electronics",
+                    cost: 11.00,
+                    price: 29.50,
+                    salePrice: 24.99,
+                    stock: 150,
+                    status: "import_list",
+                    wcId: null,
+                    image: "https://placehold.co/400x400/blue/white?text=Office+Mouse",
+                    gallery: ["https://placehold.co/400x400/blue/white?text=Mouse"],
+                    description: "<p>Ergonomic wireless mouse with adjustable DPI.</p>",
+                    variations: [{ attr: "Black", cost: 11.00, price: 29.50, stock: 150 }],
+                    metaTitle: "Ergonomic Office Mouse",
+                    metaDesc: "Ergonomic mouse.",
+                    tags: "mouse, electronics"
+                });
+                renderCatalog();
+                updateSidebarCounts();
+                closeImportModal();
+                addLog(`Imported products from uploaded file: ${file.name}`);
+                showToast("Success", "Products successfully imported from file!", "success");
+            }, 800);
+        }
+
+        function showProgress(statusText, percent) {
+            const box = document.getElementById('importProgressBox');
+            box.classList.remove('hidden');
+            document.getElementById('importProgressStatus').innerText = statusText;
+            document.getElementById('importProgressPercent').innerText = percent + '%';
+            document.getElementById('importProgressBar').style.width = percent + '%';
+        }
+
+        // Product Editor Modal Controls
+        let currentEditingProduct = null;
+
+        function openProductEditor(id) {
+            const p = importedProducts.find(item => item.id === id);
+            if (!p) return;
+            currentEditingProduct = p;
+
+            document.getElementById('editProductId').value = p.id;
+            document.getElementById('editorModalAliId').innerText = p.aliId;
+            document.getElementById('editorModalTitle').innerText = p.title;
+            document.getElementById('editorModalThumb').style.backgroundImage = `url('${p.image}')`;
+
+            document.getElementById('editTitleInput').value = p.title;
+            document.getElementById('editCostInput').value = p.cost.toFixed(2);
+            document.getElementById('editPriceInput').value = p.price.toFixed(2);
+            document.getElementById('editSalePriceInput').value = p.salePrice ? p.salePrice.toFixed(2) : '';
+            document.getElementById('editCategoryInput').value = p.category;
+            document.getElementById('editStockInput').value = p.stock;
+            document.getElementById('editDescInput').value = p.description;
+            document.getElementById('editMetaTitle').value = p.metaTitle || '';
+            document.getElementById('editMetaDesc').value = p.metaDesc || '';
+            document.getElementById('editTags').value = p.tags || '';
+
+            // Render gallery
+            const galleryContainer = document.getElementById('editGalleryContainer');
+            galleryContainer.innerHTML = p.gallery.map(img => `
+                <div class="relative h-20 bg-slate-100 rounded-xl overflow-hidden border border-slate-200 group">
+                    <img src="${img}" class="w-full h-full object-cover">
+                </div>
+            `).join('');
+
+            // Render variations
+            const varBody = document.getElementById('editVariationsTableBody');
+            varBody.innerHTML = p.variations.map((v, idx) => `
+                <tr>
+                    <td class="p-2"><input type="text" value="${v.attr}" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-xs var-attr" data-index="${idx}"></td>
+                    <td class="p-2"><input type="number" value="${v.cost}" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-xs var-cost" data-index="${idx}"></td>
+                    <td class="p-2"><input type="number" value="${v.price}" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-xs var-price" data-index="${idx}"></td>
+                    <td class="p-2"><input type="number" value="${v.stock}" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-xs var-stock" data-index="${idx}"></td>
+                    <td class="p-2 text-right"><button onclick="removeVariationRow(${idx})" class="text-rose-500 hover:text-rose-700 p-1"><i class="fa-solid fa-trash"></i></button></td>
+                </tr>
+            `).join('');
+
+            document.getElementById('productEditorModal').classList.remove('hidden');
+        }
+
+        function closeProductEditor() {
+            document.getElementById('productEditorModal').classList.add('hidden');
+            currentEditingProduct = null;
+        }
+
+        function switchEditorTab(tab) {
+            ['general', 'desc', 'var', 'seo'].forEach(t => {
+                document.getElementById(`edPanel${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.add('hidden');
+                document.getElementById(`edTab${t.charAt(0).toUpperCase() + t.slice(1)}`).className = "pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition";
+            });
+            document.getElementById(`edPanel${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.remove('hidden');
+            document.getElementById(`edTab${tab.charAt(0).toUpperCase() + tab.slice(1)}`).className = "pb-3 border-b-2 border-orange-500 text-orange-600 transition";
+        }
+
+        function saveProductChanges() {
+            if (!currentEditingProduct) return;
+            currentEditingProduct.title = document.getElementById('editTitleInput').value;
+            currentEditingProduct.price = parseFloat(document.getElementById('editPriceInput').value) || currentEditingProduct.price;
+            currentEditingProduct.salePrice = parseFloat(document.getElementById('editSalePriceInput').value) || null;
+            currentEditingProduct.category = document.getElementById('editCategoryInput').value;
+            currentEditingProduct.stock = parseInt(document.getElementById('editStockInput').value) || 0;
+            currentEditingProduct.description = document.getElementById('editDescInput').value;
+            currentEditingProduct.metaTitle = document.getElementById('editMetaTitle').value;
+            currentEditingProduct.metaDesc = document.getElementById('editMetaDesc').value;
+            currentEditingProduct.tags = document.getElementById('editTags').value;
+
+            renderCatalog();
+            closeProductEditor();
+            showToast("Saved", "Product changes saved successfully.", "success");
+            addLog(`Updated product details for AliID: ${currentEditingProduct.aliId}`);
+        }
+
+        function pushSingleProduct(id) {
+            const p = importedProducts.find(item => item.id === id);
+            if (!p) return;
+            p.status = 'pushed';
+            p.wcId = Math.floor(Math.random() * 8900 + 1000);
+            renderCatalog();
+            renderPushedTable();
+            updateSidebarCounts();
+            showToast("Pushed to WooCommerce", `Successfully published "${p.title.substring(0, 30)}..." to store!`, "success");
+            addLog(`REST API POST /wp-json/wc/v3/products -> Success. Created product #${p.wcId}`);
+        }
+
+        function pushSingleProductFromEditor() {
+            if (!currentEditingProduct) return;
+            saveProductChanges();
+            pushSingleProduct(currentEditingProduct.id);
+            closeProductEditor();
+        }
+
+        function pushAllReadyItems() {
+            const listItems = importedProducts.filter(p => p.status === 'import_list');
+            if (listItems.length === 0) {
+                showToast("Notice", "No items available in the import list to push.", "info");
+                return;
+            }
+            listItems.forEach(p => {
+                p.status = 'pushed';
+                p.wcId = Math.floor(Math.random() * 8900 + 1000);
+            });
+            renderCatalog();
+            renderPushedTable();
+            updateSidebarCounts();
+            showToast("Bulk Push Successful", `Published ${listItems.length} products to WooCommerce!`, "success");
+            addLog(`Bulk push executed. Created ${listItems.length} products on WooCommerce REST API.`);
+        }
+
+        // Settings Modal
+        function openSettingsModal() {
+            document.getElementById('settingsModal').classList.remove('hidden');
+            document.getElementById('settingStoreUrl').value = settings.storeUrl;
+            document.getElementById('settingMultiplier').value = settings.multiplier;
+            document.getElementById('settingAddon').value = settings.addon;
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
+
+        function saveSettings() {
+            settings.storeUrl = document.getElementById('settingStoreUrl').value;
+            settings.multiplier = parseFloat(document.getElementById('settingMultiplier').value) || 2.5;
+            settings.addon = parseFloat(document.getElementById('settingAddon').value) || 2.00;
+            updateSidebarCounts();
+            closeSettingsModal();
+            showToast("Settings Saved", "WooCommerce credentials and markup rules updated.", "success");
+            addLog("Updated store configuration & pricing markup formulas.");
+        }
+
+        function testWcConnection() {
+            showToast("Testing...", "Connecting to WooCommerce REST API v3...", "info");
+            setTimeout(() => {
+                showToast("Connection Verified", "WooCommerce API authenticated successfully! Response time: 142ms", "success");
+                addLog("WooCommerce API connection test successful (HTTP 200 OK).");
+            }, 800);
+        }
+
+        // Logs
+        function addLog(text) {
+            const container = document.getElementById('logsContainer');
+            const time = new Date().toLocaleTimeString();
+            const logEl = document.createElement('div');
+            logEl.className = "flex items-center space-x-2 text-slate-300";
+            logEl.innerHTML = `<span class="text-slate-500">[${time}]</span> <span class="text-orange-400">&gt;</span> <span>${text}</span>`;
+            container.prepend(logEl);
+        }
+
+        function clearLogs() {
+            document.getElementById('logsContainer').innerHTML = `<div class="flex items-center space-x-2 text-slate-500 pb-2 border-b border-slate-800"><span class="w-2 h-2 rounded-full bg-emerald-400"></span><span>Logs cleared.</span></div>`;
+        }
+
+        // Analytics Simulator
+        function runSimulation() {
+            const mult = parseFloat(document.getElementById('simMultiplier').value) || 2.5;
+            const addon = parseFloat(document.getElementById('simAddon').value) || 2.00;
+            const sampleCost = 10.00;
+            const retail = (sampleCost * mult) + addon;
+            const profit = retail - sampleCost;
+
+            document.getElementById('simulationResult').classList.remove('hidden');
+            document.getElementById('simOutput').innerText = '$' + retail.toFixed(2);
+            document.getElementById('simProfit').innerText = '$' + profit.toFixed(2);
+        }
+
+        // Toast notification helper
+        function showToast(title, message, type = 'success') {
+            const toast = document.getElementById('toastNotification');
+            document.getElementById('toastTitle').innerText = title;
+            document.getElementById('toastMessage').innerText = message;
+            const icon = document.getElementById('toastIcon');
+            if (type === 'success') {
+                icon.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400"></i>';
+            } else if (type === 'error') {
+                icon.innerHTML = '<i class="fa-solid fa-circle-exclamation text-rose-400"></i>';
+            } else {
+                icon.innerHTML = '<i class="fa-solid fa-circle-info text-sky-400"></i>';
+            }
+
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 3500);
+        }
+
+        function toggleSelectAll(master) {
+            const checkboxes = document.querySelectorAll('.product-checkbox');
+            checkboxes.forEach(cb => cb.checked = master.checked);
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            const checked = document.querySelectorAll('.product-checkbox:checked').length;
+            document.getElementById('selectedCountBadge').innerText = `${checked} items selected`;
+        }
+
+        function bulkPushToStore() {
+            const checkedBoxes = document.querySelectorAll('.product-checkbox:checked');
+            if (checkedBoxes.length === 0) {
+                showToast("Notice", "Please select at least one product to push.", "info");
+                return;
+            }
+            checkedBoxes.forEach(cb => {
+                const id = cb.getAttribute('data-id');
+                const p = importedProducts.find(item => item.id === id);
+                if (p) {
+                    p.status = 'pushed';
+                    p.wcId = Math.floor(Math.random() * 8900 + 1000);
+                }
+            });
+            renderCatalog();
+            renderPushedTable();
+            updateSidebarCounts();
+            showToast("Bulk Push Successful", `${checkedBoxes.length} products pushed to WooCommerce!`, "success");
+            addLog(`Bulk pushed ${checkedBoxes.length} items to WooCommerce store.`);
+        }
+
+        function bulkDelete() {
+            const checkedBoxes = document.querySelectorAll('.product-checkbox:checked');
+            if (checkedBoxes.length === 0) {
+                showToast("Notice", "Please select items to delete.", "info");
+                return;
+            }
+            checkedBoxes.forEach(cb => {
+                const id = cb.getAttribute('data-id');
+                importedProducts = importedProducts.filter(item => item.id !== id);
+            });
+            renderCatalog();
+            updateSidebarCounts();
+            showToast("Deleted", "Selected products removed from import list.", "success");
+        }
+
+        function bulkApplyMarkup() {
+            importedProducts.forEach(p => {
+                if(p.status === 'import_list') {
+                    p.price = (p.cost * settings.multiplier) + settings.addon;
+                }
+            });
+            renderCatalog();
+            showToast("Markup Applied", `Recalculated prices with ${settings.multiplier}x + $${settings.addon.toFixed(2)} rule.`, "success");
+            addLog("Applied global markup rules to all import list items.");
+        }
+
+        function syncSingleProduct(id) {
+            showToast("Syncing...", "Checking AliExpress for stock & price updates...", "info");
+            setTimeout(() => {
+                showToast("Synced", "Product inventory & pricing is up to date.", "success");
+                addLog(`Inventory sync completed for product ID: ${id}`);
+            }, 700);
+        }
+    </script>
+</body>
+</html>
